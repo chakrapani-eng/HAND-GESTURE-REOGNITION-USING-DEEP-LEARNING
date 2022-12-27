@@ -1,6 +1,9 @@
 # HAND-GESTURE-REOGNITION-USING-DEEP-LEARNING
 This model takes hand gesture images as input and gives the meaning of the gesture as output in the text form.
+
 If you have GPU access in your laptop you an do it in jupyter notebook or whichever IDE you have. Since I dont have a GPU card I am performing this project on Google Colab since it provides free GPU for limited time.
+
+
 YOU can access the free gpu in COLAB as: In colab interface go to EDIT>NOTEBOOKSETTINGS>HARDWAREACCELERATOR>GPU.
 ![image](https://user-images.githubusercontent.com/78845228/209652997-fef1971a-8595-412e-9583-09d4c6ef5722.png)
 
