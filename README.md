@@ -15,5 +15,9 @@ Uplaod the dataset in your google drive and copy the path to that dataset and pa
 
 
 Depending on the no.of gestures you provide,do the respective changes in (num_classes) and (dict_classes).
+
+
 This model uses EFFICIENTNETV2 application.
+
+
 For any queries you can mail me anytime[chakrapanimandlem09@gmail.com].
