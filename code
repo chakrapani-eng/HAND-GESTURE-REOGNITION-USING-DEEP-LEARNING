@@ -1,0 +1,114 @@
+#IMPORTING THE LIBRARIES
+import tensorflow as tf
+from tensorflow import keras
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import numpy as np
+import random
+#CNN LAYERS AND PREPROCESSING LAYER
+from keras.layers import Dense, Flatten, Dropout
+from keras.preprocessing.image import ImageDataGenerator
+#GIVING PATH TO THE IMAGES
+src_path_train = "/content/drive/MyDrive/Dataset/train"
+src_path_test = "/content/drive/MyDrive/Dataset/test"
+src_path_validate="/content/drive/MyDrive/Dataset/validate"
+#DEFINING NAMES AND NO.OF CLASSES AND TRAIN,TEST,VALIDATE AND DATA AUGUMENTATION
+num_classes = 13
+dict_classes={0:'0',1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'a',11:'b',12:'c'}
+train_datagen = ImageDataGenerator(
+        rescale=1 / 255.0,
+        rotation_range=20,
+        zoom_range=0.05,
+        width_shift_range=0.05,
+        height_shift_range=0.05,
+        shear_range=0.05,
+        horizontal_flip=True,
+        fill_mode="nearest")
+
+test_datagen = ImageDataGenerator(
+        rescale=1 / 255.0)
+valid_datagen=ImageDataGenerator(
+        rescale=1 / 255.0
+        )
+#MAKING IMAGES IN BATCHES TO TRIAN THE MODEL
+batch_size = 16
+train_generator = train_datagen.flow_from_directory(
+    directory=src_path_train,
+    target_size=(224, 224),
+    color_mode="rgb",
+    batch_size=batch_size,
+    class_mode="categorical",
+    
+    shuffle=True,
+    seed=42
+)
+valid_generator = valid_datagen.flow_from_directory(
+    directory=src_path_validate,
+    target_size=(224, 224),
+    color_mode="rgb",
+    batch_size=batch_size,
+    class_mode="categorical",
+    
+    shuffle=True,
+    seed=42
+)
+test_generator = test_datagen.flow_from_directory(
+    directory=src_path_test,
+    target_size=(224, 224),
+    color_mode="rgb",
+    batch_size=1,
+    class_mode="categorical",
+    shuffle=False,
+    seed=42
+)
+#DEFINING THE MODEL
+input = tf.keras.Input([224, 224, 3])
+features = tf.keras.applications.efficientnet_v2.EfficientNetV2L(
+    include_top=False,
+    weights='imagenet',
+    input_tensor=None,
+    input_shape=(224,224,3),
+    pooling='avg',
+    classes=num_classes,
+    classifier_activation='softmax',
+    include_preprocessing=True
+)(input)
+dropout = layer = tf.keras.layers.Dropout(.2)(features)
+classifications = tf.keras.layers.Dense(num_classes, activation='softmax')(dropout)
+model = tf.keras.Model(inputs=input, outputs=classifications)
+model.compile(loss="categorical_crossentropy",optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),metrics=['accuracy'])
+#MODEL SUMMARY
+model.summary()
+#MODEL FITTING
+model.fit(train_generator,
+                    validation_data = train_generator,
+                    steps_per_epoch = train_generator.n//train_generator.batch_size,
+                    validation_steps =valid_generator.n//valid_generator.batch_size,
+                    epochs=10)
+#TESTING ACCURACY
+score = model.evaluate(test_generator)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
+#DEFINING PREDICTION FUNCTION
+import cv2
+def prediction(path):
+    image = cv2.imread(path)
+    plt.axis("off")
+    plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    plt.title("original image")
+    plt.show()
+    image=image/255.0
+    image=np.expand_dims(image,axis=0)
+    image = tf.image.resize(image, [224,224])
+    ynew=model.predict(image)
+    prediction=dict_classes[np.argmax(ynew)]
+    print("Model prediction for above image: ", prediction)
+#TAKING RANDOM IMAGES FROM TEST IMAGE DATASET 
+test_img_paths = []
+for path in os.listdir(src_path_test):
+    test_img_paths.extend([os.path.join(src_path_test,path,img) for img in os.listdir(os.path.join(src_path_test,path))])
+#TESTING THE TEST IMAGES DATASET
+random_image_path = random.choice(test_img_paths)
+prediction(random_image_path)
